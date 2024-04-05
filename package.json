@@ -1,7 +1,7 @@
 {
   "name": "@solid-hooks/drag",
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "drag hooks for solid.js",
   "author": "subframe7536",
   "license": "MIT",
@@ -22,8 +22,8 @@
       }
     }
   },
-  "main": "dist/index.js",
-  "module": "dist/index.cjs",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
   "files": [
     "dist"
   ],
@@ -32,7 +32,7 @@
     "dev": "bun --bunx vite serve playground",
     "format": "eslint . --fix",
     "build": "tsup",
-    "release": "bun run lint && bun run test && bun run build && bumpp --all && npm publish",
+    "release": "bun run lint && bun run build && bumpp --all && npm publish",
     "test": "vitest --run"
   },
   "publishConfig": {
@@ -56,8 +56,7 @@
     "jsdom": "^24.0.0",
     "solid-js": "^1.8.16",
     "tsup": "^8.0.2",
-    "typescript": "^5.4.3",
-    "vite": "^5.2.8",
+    "typescript": "^5.4.4",
     "vite-plugin-solid": "^2.10.2",
     "vitest": "^1.4.0"
   }
