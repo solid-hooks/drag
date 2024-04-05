@@ -1,32 +1,5 @@
-<p>
-  <img width="100%" src="https://assets.solidjs.com/banner?type=@solid-hooks/drag&background=tiles&project=%20" alt="@solid-hooks/drag">
-</p>
-
-# @solid-hooks/drag
-
-drag hooks for solid.js
-
-## Install
-
-```shell
-npm i @solid-hooks/drag
-```
-```shell
-yarn add @solid-hooks/drag
-```
-```shell
-pnpm add @solid-hooks/drag
-```
-
-## Usage
-
-### `useDrag`
-
-make element draggable
-
-```tsx
 import { createSignal } from 'solid-js'
-import { useDrag } from '@solid-hooks/drag'
+import { useDrag } from '../src/index'
 
 export default function App() {
   const [el, setEl] = createSignal<HTMLElement>()
@@ -68,8 +41,3 @@ export default function App() {
     </>
   )
 }
-```
-
-## License
-
-MIT

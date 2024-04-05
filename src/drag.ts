@@ -1,7 +1,6 @@
 import { type EventListenerOptions, makeEventListener } from '@solid-primitives/event-listener'
 import type { Accessor } from 'solid-js'
-import { createMemo, createRenderEffect, createSignal, on, onMount } from 'solid-js'
-import { type MaybeAccessor, access } from '@solid-primitives/utils'
+import { DEV, createMemo, createRenderEffect, createSignal, onMount } from 'solid-js'
 
 type Position = {
   x: number
@@ -18,7 +17,7 @@ export type DragOptions = {
    * element to trigger drag event
    * @default el
    */
-  handleEl?: MaybeAccessor<DraggableElement>
+  handleEl?: Accessor<DraggableElement>
   /**
    * initial posistion
    * @default { x: 0, y: 0}
@@ -96,6 +95,8 @@ type DragResult = {
 
 /**
  * make element draggable, recommend to add `touch-action: none` on element
+ *
+ * please use `createSignal` to bind element reference
  * @param el target element
  * @param options drag options
  * @example
@@ -103,7 +104,7 @@ type DragResult = {
  * import { useDrag } from '@solid-hooks/drag'
  *
  * const [el, setEl] = createSignal<HTMLElement>()
- * const [handler, setHandler] = createSignal<HTMLElement>()
+ * const [handleEl, setHandleEl] = createSignal<HTMLElement>()
  *
  * const {
  *   position,
@@ -115,7 +116,7 @@ type DragResult = {
  * } = useDrag(el, {
  *   initialPosition: { x: 200, y: 80 },
  *   addStyle: true, // auto update el's left and top
- *   handleEl: handle,
+ *   handleEl,
  * })
  * return (
  *   <div
@@ -134,7 +135,7 @@ type DragResult = {
  * ```
  */
 export function useDrag(
-  el: MaybeAccessor<DraggableElement>,
+  el: Accessor<DraggableElement>,
   options: DragOptions = {},
 ): DragResult {
   const {
@@ -151,17 +152,23 @@ export function useDrag(
     bindOnMount = true,
   } = options
 
-  const canMoveX = /(both|x)/.test(axis)
-  const canMoveY = /(both|y)/.test(axis)
+  let cleanup: VoidFunction | undefined
+  const canMoveX = axis !== 'y'
+  const canMoveY = axis !== 'x'
   const [position, setPosition] = createSignal<Position>({ ...initialPosition })
   const [startPosition, setStartPosition] = createSignal<Position>()
-
-  let cleanup: VoidFunction | undefined
   const [track, trigger] = createSignal(undefined, { equals: false })
 
   function bindEvents() {
+    const handle = handleEl()
+    if (!handle) {
+      DEV && console.error(
+        'handle element does not exist, please use `const [el, setEl] = createSignal<HTMLElement>()` instead of `let el: HTMLDivElement | undefined`',
+      )
+      return
+    }
     const cleanupStart = makeEventListener(
-      access(handleEl)!,
+      handle,
       'pointerdown',
       (event) => {
         if ((ignoreMultiPointer && event.isPrimary)
@@ -169,7 +176,7 @@ export function useDrag(
           || (leftClick && event.button !== 0)) {
           return
         }
-        const _el = access(el)!
+        const _el = el()!
         const rect = _el.getBoundingClientRect()
         const pos: Position = {
           x: event.clientX - rect.left,
@@ -211,7 +218,7 @@ export function useDrag(
         if (!startPosition()) {
           return
         }
-        access(el)!.releasePointerCapture(event.pointerId)
+        el()!.releasePointerCapture(event.pointerId)
         setStartPosition()
         onEnd?.(position(), event)
       },
@@ -228,20 +235,21 @@ export function useDrag(
   bindOnMount && onMount(() => {
     bindEvents()
   })
-  addStyle && createRenderEffect(on(position, ({ x, y }) => {
-    const _el = access(el)
+  addStyle && createRenderEffect(() => {
+    const { x, y } = position()
+    const _el = el()
     if (_el) {
-      _el.style.left = `${x}px`
-      _el.style.top = `${y}px`
+      _el.style.left = x + 'px'
+      _el.style.top = y + 'px'
     }
-  }))
+  })
 
   return {
     position,
-    isDragging: createMemo(() => startPosition() === undefined),
+    isDragging: createMemo(() => !!startPosition()),
     isDraggable: createMemo(() => {
       track()
-      return cleanup !== undefined
+      return !!cleanup
     }),
     enable: bindEvents,
     disable: () => {
